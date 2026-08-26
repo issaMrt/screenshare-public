@@ -144,6 +144,40 @@ Cela autorise ce domaine à ouvrir des connexions WebSocket vers ton serveur (pr
 - Les en-têtes `X-Frame-Options`, `Content-Security-Policy` et `X-Content-Type-Options` empêchent l'intégration du site dans un iframe tiers
 - Un nombre maximum de spectateurs et de connexions par IP est appliqué pour éviter les abus
 
+## Capturer l'audio d'une seule application (ex : un jeu)
+
+Par défaut, `getDisplayMedia` (utilisé par la page émetteur) capture le **son système global**, pas le son d'une application précise. Deux méthodes pour isoler l'audio d'un seul jeu/app :
+
+### Méthode simple — partager la fenêtre, pas l'écran
+
+Sur Chrome/Edge (Windows), si tu partages **la fenêtre de l'application** plutôt que "Tout l'écran" dans la fenêtre de sélection, le navigateur peut isoler automatiquement le son de cette fenêtre. Ça ne fonctionne pas toujours :
+- Si le jeu tourne en **plein écran exclusif**, il n'apparaît pas comme une fenêtre partageable dans certains cas — passe le jeu en mode **"Plein écran fenêtré" / "Borderless"** dans ses options graphiques pour qu'il apparaisse comme une fenêtre normale.
+- Sur **Edge**, la case à cocher "Partager l'audio de l'onglet/de la fenêtre" ne s'affiche que pour un onglet Chrome/Edge ou une fenêtre spécifique — elle est **grisée ou absente quand tu choisis "Tout l'écran"**, car dans ce cas le navigateur ne peut capturer que le son global du système, pas celui d'une fenêtre.
+- Le comportement varie selon la version du navigateur : teste avant l'émission en direct.
+
+### Méthode fiable — VB-Cable (ou Voicemeeter)
+
+Si le partage de fenêtre ne capture pas l'audio correctement, route uniquement l'app voulue vers un périphérique audio virtuel :
+
+1. Installe **[VB-CABLE](https://vb-audio.com/Cable/)** (gratuit) et redémarre le PC.
+2. Ouvre le **Mélangeur de volume** Windows (Paramètres > Système > Son > Mélangeur de volume, ou clique droit sur l'icône haut-parleur).
+3. Trouve ton jeu dans la liste et change sa **sortie** de "Casque" vers **"CABLE Input"**. Laisse toutes les autres apps (navigateur, Discord...) sur ta sortie normale.
+4. Pour continuer à entendre le jeu toi-même : Panneau de configuration > Son > onglet Enregistrement > double-clic sur **CABLE Output** > onglet Écouter > coche **"Écouter ce périphérique"** > choisis ton casque en sortie.
+5. Dans la page émetteur, partage l'écran/la fenêtre avec **"Partager l'audio"** coché. Comme le jeu est maintenant la seule source routée sur CABLE, seul son son est capturé.
+
+⚠️ Cette méthode ajoute un léger délai audio (latence de traitement) :
+
+| Configuration | Délai approximatif |
+|---|---|
+| VB-Cable + "Écouter ce périphérique" | ~30 à 70 ms |
+| [Voicemeeter](https://vb-audio.com/Voicemeeter/) en mode ASIO | ~5 à 15 ms |
+| Voicemeeter en mode WDM | ~20 à 40 ms |
+| Voicemeeter en mode MME | ~50 à 100 ms (à éviter) |
+
+Si tu ressens un décalage entre l'image et le son du jeu et veux le réduire, remplace VB-Cable seul par **Voicemeeter** : il fait le mixage et la capture en une seule passe au lieu de deux, ce qui réduit nettement la latence. Le mode ASIO (si ta carte son/casque le supporte) donne le meilleur résultat.
+
+Pour mesurer objectivement le délai plutôt qu'à l'oreille : ouvre `chrome://webrtc-internals` sur la page spectateur pendant l'émission, cherche la section `RTCInboundRTPAudioStream`, et calcule `jitterBufferDelay ÷ jitterBufferEmittedCount × 1000` pour obtenir le délai en millisecondes.
+
 ## Structure du projet
 
 ```
