@@ -36,7 +36,7 @@ Partage d'écran privé en direct via **WebRTC**, avec un lien émetteur protég
   <img src="docs/screenshot-viewer.png" alt="Page spectateur" width="45%">
 </p>
 <p align="center">
-  <sub><b>Page émetteur</b> (gauche) — <b>Page spectateur</b> (droite)</sub>
+  <sub><b>Page émetteur</b> (gauche), <b>page spectateur</b> (droite)</sub>
 </p>
 
 ## Stack technique
@@ -71,13 +71,13 @@ npm -v
 
 ### 2. Récupérer le projet
 
-**Option A — avec Git :**
+**Option A, avec Git :**
 ```bash
 git clone https://github.com/issaMrt/screenshare-public.git
 cd screenshare-public
 ```
 
-**Option B — sans Git :** clique sur le bouton **⬇️ Télécharger le projet** en haut de ce README, décompresse le fichier `.zip`, puis ouvre un terminal dans le dossier obtenu.
+**Option B, sans Git :** clique sur le bouton **⬇️ Télécharger le projet** en haut de ce README, décompresse le fichier `.zip`, puis ouvre un terminal dans le dossier obtenu.
 
 ### 3. Installer les dépendances
 
@@ -148,14 +148,14 @@ Cela autorise ce domaine à ouvrir des connexions WebSocket vers ton serveur (pr
 
 Par défaut, `getDisplayMedia` (utilisé par la page émetteur) capture le **son système global**, pas le son d'une application précise. Deux méthodes pour isoler l'audio d'un seul jeu/app :
 
-### Méthode simple — partager la fenêtre, pas l'écran
+### Méthode simple : partager la fenêtre, pas l'écran
 
 Sur Chrome/Edge (Windows), si tu partages **la fenêtre de l'application** plutôt que "Tout l'écran" dans la fenêtre de sélection, le navigateur peut isoler automatiquement le son de cette fenêtre. Ça ne fonctionne pas toujours :
-- Si le jeu tourne en **plein écran exclusif**, il n'apparaît pas comme une fenêtre partageable dans certains cas — passe le jeu en mode **"Plein écran fenêtré" / "Borderless"** dans ses options graphiques pour qu'il apparaisse comme une fenêtre normale.
-- Sur **Edge**, la case à cocher "Partager l'audio de l'onglet/de la fenêtre" ne s'affiche que pour un onglet Chrome/Edge ou une fenêtre spécifique — elle est **grisée ou absente quand tu choisis "Tout l'écran"**, car dans ce cas le navigateur ne peut capturer que le son global du système, pas celui d'une fenêtre.
+- Si le jeu tourne en **plein écran exclusif**, il n'apparaît pas comme une fenêtre partageable dans certains cas. Passe le jeu en mode **"Plein écran fenêtré" / "Borderless"** dans ses options graphiques pour qu'il apparaisse comme une fenêtre normale.
+- Sur **Edge**, la case à cocher "Partager l'audio de l'onglet/de la fenêtre" ne s'affiche que pour un onglet Chrome/Edge ou une fenêtre spécifique. Elle est **grisée ou absente quand tu choisis "Tout l'écran"**, car dans ce cas le navigateur ne peut capturer que le son global du système, pas celui d'une fenêtre.
 - Le comportement varie selon la version du navigateur : teste avant l'émission en direct.
 
-### Méthode fiable — VB-Cable (ou Voicemeeter)
+### Méthode fiable : VB-Cable (ou Voicemeeter)
 
 Si le partage de fenêtre ne capture pas l'audio correctement, route uniquement l'app voulue vers un périphérique audio virtuel :
 
