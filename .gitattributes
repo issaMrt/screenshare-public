@@ -1,0 +1,8 @@
+# Normalise les fins de ligne en LF pour tous les fichiers texte,
+# quel que soit l'OS utilisé pour committer (évite les warnings
+# "LF will be replaced by CRLF" sous Windows).
+* text=auto eol=lf
+
+# Les scripts Windows gardent des fins de ligne CRLF, sinon ils
+# peuvent mal s'exécuter dans l'invite de commandes.
+*.bat text eol=crlf

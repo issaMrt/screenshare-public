@@ -11,12 +11,10 @@ Partage d'écran privé en direct via **WebRTC**, avec un lien émetteur protég
 </p>
 
 <p align="center">
-  <a href="https://github.com/TON-USERNAME/screenshare-prive/archive/refs/heads/main.zip">
+  <a href="https://github.com/issaMrt/screenshare-public/archive/refs/heads/main.zip">
     <img alt="Télécharger le projet" src="https://img.shields.io/badge/⬇️_Télécharger_le_projet-4f7cff?style=for-the-badge&logoColor=white">
   </a>
 </p>
-
-> Remplace `TON-USERNAME` dans le lien ci-dessus par ton propre nom d'utilisateur GitHub une fois le dépôt en ligne, pour que le bouton pointe vers ton repo.
 
 ---
 
@@ -30,6 +28,15 @@ Partage d'écran privé en direct via **WebRTC**, avec un lien émetteur protég
 - Sélecteur de qualité côté spectateur (480p / 720p / 1080p)
 - Protections réseau : rate limiting HTTP, limite de connexions WebSocket par IP, en-têtes de sécurité (anti-clickjacking, anti-iframe)
 - Script `start.bat` pour tout lancer en un clic sous Windows (serveur + tunnel ngrok + navigateur)
+
+## Captures d'écran
+
+<p align="center">
+  <img src="docs/screenshot-sender.png" alt="Page émetteur" width="45%">
+  <img src="docs/screenshot-viewer.png" alt="Page spectateur" width="45%">
+</p>
+
+> Crée un dossier `docs/` à la racine du projet, ajoute-y une capture de la page émetteur (`screenshot-sender.png`) et une de la page spectateur (`screenshot-viewer.png`), puis commit/push-les. Les images s'afficheront automatiquement ici une fois en ligne.
 
 ## Stack technique
 
@@ -65,8 +72,8 @@ npm -v
 
 **Option A — avec Git :**
 ```bash
-git clone https://github.com/TON-USERNAME/screenshare-prive.git
-cd screenshare-prive
+git clone https://github.com/issaMrt/screenshare-public.git
+cd screenshare-public
 ```
 
 **Option B — sans Git :** clique sur le bouton **⬇️ Télécharger le projet** en haut de ce README, décompresse le fichier `.zip`, puis ouvre un terminal dans le dossier obtenu.
@@ -139,14 +146,16 @@ Cela autorise ce domaine à ouvrir des connexions WebSocket vers ton serveur (pr
 ## Structure du projet
 
 ```
-screenshare-prive/
+screenshare-public/
 ├── server.js            # Serveur Express + WebSocket (signalisation WebRTC)
 ├── public/
 │   ├── sender.html       # Page émetteur (protégée par token)
 │   └── viewer.html       # Page spectateur
+├── docs/                 # Captures d'écran utilisées dans ce README
 ├── start.bat             # Lancement rapide sous Windows
 ├── package.json
 ├── .env.example           # Modèle de configuration
+├── .gitattributes         # Normalisation des fins de ligne
 └── .gitignore
 ```
 
