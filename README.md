@@ -35,8 +35,9 @@ Partage d'écran privé en direct via **WebRTC**, avec un lien émetteur protég
   <img src="docs/screenshot-sender.png" alt="Page émetteur" width="45%">
   <img src="docs/screenshot-viewer.png" alt="Page spectateur" width="45%">
 </p>
-
-> Crée un dossier `docs/` à la racine du projet, ajoute-y une capture de la page émetteur (`screenshot-sender.png`) et une de la page spectateur (`screenshot-viewer.png`), puis commit/push-les. Les images s'afficheront automatiquement ici une fois en ligne.
+<p align="center">
+  <sub><b>Page émetteur</b> (gauche) — <b>Page spectateur</b> (droite)</sub>
+</p>
 
 ## Stack technique
 
