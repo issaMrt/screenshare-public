@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Emetteur - Partage d'ecran</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #14171c;
+    --panel-border: #23272e;
+    --accent: #4f7cff;
+    --accent-hover: #6b91ff;
+    --danger: #e5484d;
+    --danger-hover: #f16468;
+    --text: #e6e8eb;
+    --text-dim: #8b929c;
+    --green: #35c470;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh; padding: 32px 20px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+  }
+  h1 { font-size: 20px; font-weight: 600; margin: 0; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 500;
+    background: #1c2028; border: 1px solid var(--panel-border);
+    color: var(--text-dim);
+  }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); }
+  .badge.live { color: var(--green); background: #0f2018; border-color: #1f3a29; }
+  .badge.live .dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+  .grid {
+    display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px;
+  }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 14px; padding: 18px;
+  }
+  .card h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--text-dim); margin: 0 0 14px 0; font-weight: 600;
+  }
+
+  .video-shell {
+    position: relative; border-radius: 10px; overflow: hidden;
+    background: #000; aspect-ratio: 16/9;
+    display: flex; align-items: center; justify-content: center;
+  }
+  video { width: 100%; height: 100%; object-fit: contain; }
+  .video-placeholder { color: var(--text-dim); font-size: 14px; text-align: center; padding: 20px; }
+
+  .actions { display: flex; gap: 10px; margin-top: 16px; }
+  button {
+    border: none; border-radius: 9px; padding: 12px 18px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: background .15s ease, opacity .15s ease;
+  }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover:not(:disabled) { background: var(--danger-hover); }
+  button svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
+
+  .stat-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--panel-border);
+    font-size: 14px;
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .label { color: var(--text-dim); }
+  .stat-row .value { font-weight: 600; }
+
+  #viewerList { list-style: none; margin: 0; padding: 0; }
+  #viewerList li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--panel-border);
+    font-size: 13px;
+  }
+  #viewerList li:last-child { border-bottom: none; }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .viewer-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; flex: 1; min-width: 0; }
+  .viewer-ip { font-family: "SF Mono", Consolas, monospace; color: var(--text); font-size: 12px; }
+  .viewer-meta { color: var(--text-dim); font-size: 11px; }
+  .note-input {
+    background: transparent; border: 1px solid transparent; color: var(--text);
+    font-size: 13px; padding: 3px 6px; border-radius: 6px; width: 100%;
+    font-family: inherit;
+  }
+  .note-input::placeholder { color: var(--text-dim); }
+  .note-input:hover { border-color: var(--panel-border); }
+  .note-input:focus { border-color: var(--accent); outline: none; background: #0e1116; }
+  .empty-state { color: var(--text-dim); font-size: 13px; padding: 8px 0; }
+
+  .link-row { display: flex; gap: 8px; margin-top: 4px; }
+  .link-row input {
+    flex: 1; background: #0e1116; border: 1px solid var(--panel-border);
+    color: var(--text-dim); font-size: 12px; padding: 9px 10px; border-radius: 8px;
+    font-family: "SF Mono", Consolas, monospace;
+  }
+  .link-row button {
+    padding: 9px 12px; background: #1c2028; color: var(--text);
+    border: 1px solid var(--panel-border); font-size: 12px;
+  }
+  .link-row button:hover { background: #23272e; }
+
+  #chatMessages {
+    max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .chat-msg { font-size: 13px; line-height: 1.4; max-width: 85%; }
+  .chat-msg .who { font-size: 11px; color: var(--text-dim); margin-bottom: 2px; }
+  .chat-msg .bubble { background: #1c2028; padding: 7px 10px; border-radius: 8px; display: inline-block; }
+  .chat-msg.mine { align-self: flex-end; }
+  .chat-msg.mine .bubble { background: var(--accent); }
+  .chat-empty { color: var(--text-dim); font-size: 13px; padding: 8px 0; }
+  #chatInputRow { display: flex; gap: 8px; }
+  #chatTarget {
+    background: #0e1116; border: 1px solid var(--panel-border); color: var(--text);
+    font-size: 12px; padding: 8px; border-radius: 8px; max-width: 110px; flex-shrink: 0;
+  }
+  #chatInput {
+    flex: 1; background: #0e1116; border: 1px solid var(--panel-border); color: var(--text);
+    font-size: 13px; padding: 8px 10px; border-radius: 8px; outline: none; min-width: 0;
+  }
+  #chatSendBtn { padding: 8px 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Emission en direct</h1>
+    <span class="badge" id="statusBadge"><span class="dot"></span><span id="statusText">Non connecte</span></span>
+  </header>
+
+  <div class="grid">
+
+    <div class="card">
+      <h2>Apercu</h2>
+      <div class="video-shell">
+        <p class="video-placeholder" id="videoPlaceholder">Le partage n'a pas encore demarre</p>
+        <video id="preview" autoplay muted></video>
+      </div>
+      <div class="actions">
+        <button id="startBtn" class="btn-primary">
+          <svg viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4l1 2H9l1-2H6a2 2 0 0 1-2-2V6zm2 0v10h12V6H6z"/></svg>
+          Demarrer le partage
+        </button>
+        <button id="stopBtn" class="btn-danger" disabled>
+          <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+          Arreter
+        </button>
+      </div>
+
+      <div style="margin-top:18px;">
+        <p class="stat-row"><span class="label">Lien spectateur</span></p>
+        <div class="link-row">
+          <input type="text" id="watchLink" readonly>
+          <button id="copyBtn">Copier</button>
+        </div>
+      </div>
+
+      <h2 style="margin-top:20px;">Chat</h2>
+      <div id="chatMessages"><p class="chat-empty">Aucun message</p></div>
+      <div id="chatInputRow">
+        <select id="chatTarget"></select>
+        <input type="text" id="chatInput" placeholder="Ecrire un message..." maxlength="500">
+        <button id="chatSendBtn">Envoyer</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Statistiques</h2>
+      <div class="stat-row">
+        <span class="label">Spectateurs connectes</span>
+        <span class="value" id="viewerCount">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">Duree de diffusion</span>
+        <span class="value" id="duration">00:00</span>
+      </div>
+
+      <h2 style="margin-top:20px;">Spectateurs</h2>
+      <ul id="viewerList"></ul>
+      <p class="empty-state" id="emptyState">Aucun spectateur connecte</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const preview = document.getElementById('preview');
+const videoPlaceholder = document.getElementById('videoPlaceholder');
+const statusBadge = document.getElementById('statusBadge');
+const statusText = document.getElementById('statusText');
+const viewerCountEl = document.getElementById('viewerCount');
+const viewerListEl = document.getElementById('viewerList');
+const emptyStateEl = document.getElementById('emptyState');
+const durationEl = document.getElementById('duration');
+const watchLinkInput = document.getElementById('watchLink');
+const copyBtn = document.getElementById('copyBtn');
+
+watchLinkInput.value = `${location.origin}/watch/room1`;
+copyBtn.onclick = () => {
+  navigator.clipboard.writeText(watchLinkInput.value).then(() => {
+    copyBtn.textContent = 'Copie !';
+    setTimeout(() => copyBtn.textContent = 'Copier', 1500);
+  });
+};
+
+let ws;
+let localStream;
+const peers = new Map(); // viewerId -> RTCPeerConnection
+const viewerMeta = new Map(); // viewerId -> { ip }
+let startTime = null;
+let durationInterval = null;
+
+const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+function setStatus(text, live) {
+  statusText.textContent = text;
+  statusBadge.classList.toggle('live', !!live);
+}
+
+function connectWS() {
+  ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`);
+
+  ws.onopen = () => {
+    const token = new URLSearchParams(location.search).get('token') || '';
+    ws.send(JSON.stringify({ type: 'broadcaster-join', token }));
+    setStatus('Connecte, en attente de spectateurs', true);
+  };
+
+  ws.onmessage = async (event) => {
+    const msg = JSON.parse(event.data);
+
+    if (msg.type === 'auth-error') {
+      setStatus('Erreur : ' + msg.message, false);
+      stopSharing();
+      ws.close();
+      return;
+    }
+
+    if (msg.type === 'viewer-joined') {
+      viewerMeta.set(msg.viewerId, { ip: msg.ip || 'inconnue', note: msg.note || '' });
+      await createPeerForViewer(msg.viewerId);
+      renderViewerList();
+      renderChatTarget();
+    }
+
+    if (msg.type === 'viewer-left') {
+      const pc = peers.get(msg.viewerId);
+      if (pc) { pc.close(); peers.delete(msg.viewerId); }
+      viewerMeta.delete(msg.viewerId);
+      renderViewerList();
+      renderChatTarget();
+    }
+
+    if (msg.type === 'answer') {
+      const pc = peers.get(msg.from);
+      if (pc) await pc.setRemoteDescription(new RTCSessionDescription(msg.answer));
+    }
+
+    if (msg.type === 'ice-candidate') {
+      const pc = peers.get(msg.from);
+      if (pc && msg.candidate) {
+        try { await pc.addIceCandidate(msg.candidate); } catch (e) { console.warn(e); }
+      }
+    }
+
+    if (msg.type === 'quality-request') {
+      applyQuality(msg.from, msg.quality);
+    }
+
+    if (msg.type === 'chat-message') {
+      const meta = viewerMeta.get(msg.from);
+      const who = meta && meta.note ? meta.note : (meta ? meta.ip : 'Spectateur');
+      addChatMessage(msg.text, who, false);
+    }
+
+    if (msg.type === 'note-updated') {
+      const meta = viewerMeta.get(msg.viewerId);
+      if (meta) meta.note = msg.note;
+      renderViewerList();
+      renderChatTarget();
+    }
+  };
+
+  ws.onclose = () => { setStatus('Deconnecte du serveur', false); };
+}
+
+async function createPeerForViewer(viewerId) {
+  if (!localStream) return;
+  const pc = new RTCPeerConnection(rtcConfig);
+  peers.set(viewerId, pc);
+
+  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+  pc.onicecandidate = (e) => {
+    if (e.candidate) {
+      ws.send(JSON.stringify({ type: 'ice-candidate', to: viewerId, candidate: e.candidate }));
+    }
+  };
+
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  ws.send(JSON.stringify({ type: 'offer', to: viewerId, offer }));
+}
+
+function applyQuality(viewerId, quality) {
+  const pc = peers.get(viewerId);
+  if (!pc) return;
+  const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+  if (!sender) return;
+
+  const params = sender.getParameters();
+  if (!params.encodings) params.encodings = [{}];
+
+  const presets = {
+    low:    { maxBitrate: 300_000,  scaleResolutionDownBy: 4 },
+    medium: { maxBitrate: 1_200_000, scaleResolutionDownBy: 2 },
+    high:   { maxBitrate: 4_000_000, scaleResolutionDownBy: 1 }
+  };
+  const p = presets[quality] || presets.medium;
+  params.encodings[0].maxBitrate = p.maxBitrate;
+  params.encodings[0].scaleResolutionDownBy = p.scaleResolutionDownBy;
+  sender.setParameters(params).catch(console.warn);
+}
+
+function initials(ip) {
+  const parts = ip.replace('::ffff:', '').split(/[.:]/).filter(Boolean);
+  return (parts[0] || '?').slice(0, 2).toUpperCase();
+}
+
+function renderViewerList() {
+  viewerCountEl.textContent = peers.size;
+  viewerListEl.innerHTML = '';
+
+  if (viewerMeta.size === 0) {
+    emptyStateEl.style.display = 'block';
+    return;
+  }
+  emptyStateEl.style.display = 'none';
+
+  for (const [id, meta] of viewerMeta) {
+    const ipClean = meta.ip.replace('::ffff:', '');
+    const li = document.createElement('li');
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = initials(ipClean);
+
+    const info = document.createElement('div');
+    info.className = 'viewer-info';
+
+    const ipSpan = document.createElement('span');
+    ipSpan.className = 'viewer-ip';
+    ipSpan.textContent = ipClean;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'note-input';
+    input.placeholder = 'Ajouter une note (ex: prenom)';
+    input.maxLength = 100;
+    input.value = meta.note || ''; // .value echappe automatiquement, pas de risque d'injection HTML
+
+    info.appendChild(ipSpan);
+    info.appendChild(input);
+    li.appendChild(avatar);
+    li.appendChild(info);
+
+    input.addEventListener('change', () => {
+      const note = input.value.trim();
+      meta.note = note;
+      ws.send(JSON.stringify({ type: 'set-note', viewerId: id, ip: ipClean, note }));
+      renderChatTarget();
+    });
+    viewerListEl.appendChild(li);
+  }
+}
+
+function startDurationTimer() {
+  startTime = Date.now();
+  durationInterval = setInterval(() => {
+    const s = Math.floor((Date.now() - startTime) / 1000);
+    const mm = String(Math.floor(s / 60)).padStart(2, '0');
+    const ss = String(s % 60).padStart(2, '0');
+    durationEl.textContent = `${mm}:${ss}`;
+  }, 1000);
+}
+
+function stopDurationTimer() {
+  clearInterval(durationInterval);
+  durationEl.textContent = '00:00';
+}
+
+startBtn.onclick = async () => {
+  try {
+    localStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: 30 },
+      audio: true
+    });
+
+    preview.srcObject = localStream;
+    videoPlaceholder.style.display = 'none';
+
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    setStatus('Partage en cours', true);
+    startDurationTimer();
+
+    connectWS();
+
+    localStream.getVideoTracks()[0].onended = () => stopSharing();
+  } catch (err) {
+    setStatus('Erreur : ' + err.message, false);
+  }
+};
+
+stopBtn.onclick = stopSharing;
+
+function stopSharing() {
+  if (localStream) localStream.getTracks().forEach(t => t.stop());
+  peers.forEach(pc => pc.close());
+  peers.clear();
+  viewerMeta.clear();
+  if (ws) ws.close();
+
+  preview.srcObject = null;
+  videoPlaceholder.style.display = 'flex';
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+  setStatus('Arrete', false);
+  stopDurationTimer();
+  renderViewerList();
+  renderChatTarget();
+}
+
+renderViewerList();
+
+// ==== CHAT ====
+const chatMessagesEl = document.getElementById('chatMessages');
+const chatInputEl = document.getElementById('chatInput');
+const chatSendBtn = document.getElementById('chatSendBtn');
+const chatTargetEl = document.getElementById('chatTarget');
+
+function addChatMessage(text, who, mine) {
+  const empty = chatMessagesEl.querySelector('.chat-empty');
+  if (empty) empty.remove();
+
+  const div = document.createElement('div');
+  div.className = 'chat-msg' + (mine ? ' mine' : '');
+  div.innerHTML = `<div class="who"></div><div class="bubble"></div>`;
+  div.querySelector('.who').textContent = who;
+  div.querySelector('.bubble').textContent = text;
+  chatMessagesEl.appendChild(div);
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+}
+
+function renderChatTarget() {
+  const prevValue = chatTargetEl.value;
+  chatTargetEl.innerHTML = '';
+
+  if (viewerMeta.size === 0) {
+    const opt = document.createElement('option');
+    opt.textContent = 'Aucun spectateur';
+    opt.disabled = true;
+    chatTargetEl.appendChild(opt);
+    return;
+  }
+
+  for (const [id, meta] of viewerMeta) {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = meta.note || meta.ip.replace('::ffff:', '');
+    chatTargetEl.appendChild(opt);
+  }
+  if ([...viewerMeta.keys()].includes(prevValue)) chatTargetEl.value = prevValue;
+}
+
+function sendChatReply() {
+  const text = chatInputEl.value.trim();
+  const target = chatTargetEl.value;
+  if (!text || !target || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type: 'chat-reply', to: target, text }));
+  addChatMessage(text, 'Vous', true);
+  chatInputEl.value = '';
+}
+
+chatSendBtn.onclick = sendChatReply;
+chatInputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendChatReply();
+});
+
+renderChatTarget();
+</script>
+</body>
+</html>
