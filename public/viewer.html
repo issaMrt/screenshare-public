@@ -285,23 +285,15 @@ fullscreenBtn.onclick = () => {
   }
 };
 
-document.addEventListener('fullscreenchange', () => {
-  const isFs = !!document.fullscreenElement;
-  fsIconEnter.style.display = isFs ? 'none' : 'block';
-  fsIconExit.style.display = isFs ? 'block' : 'none';
-
-  if (isFs) {
-    startAutoHide();
-  } else {
-    stopAutoHide();
-    showControls();
-  }
-});
-
-// ==== AUTO-MASQUAGE DE LA BARRE EN PLEIN ECRAN ====
+// ==== AUTO-MASQUAGE DE LA BARRE DE CONTROLES ====
 const controls = document.getElementById('controls');
 let hideTimer = null;
-const HIDE_DELAY = 2500; // ms d'inactivite avant de masquer la barre (desktop)
+const HIDE_DELAY = 2500; // ms d'inactivite avant de masquer la barre
+
+// pointer grossier (doigt) = mobile/tablette, pointer fin (souris) = PC
+function isTouchDevice() {
+  return window.matchMedia('(pointer: coarse)').matches;
+}
 
 function isControlsVisible() {
   return !controls.classList.contains('hidden');
@@ -318,39 +310,56 @@ function hideControls() {
   controls.classList.add('hidden');
 }
 
-// Desktop : bouger la souris reaffiche la barre et relance le minuteur d'auto-masquage
-function resetHideTimer() {
-  showControls();
+function armHideTimer() {
   clearTimeout(hideTimer);
-  if (document.fullscreenElement) {
-    hideTimer = setTimeout(hideControls, HIDE_DELAY);
-  }
+  hideTimer = setTimeout(hideControls, HIDE_DELAY);
 }
 
-// Mobile : un tap bascule simplement l'affichage (montre si cachee, cache si visible)
-function toggleControlsOnTap(e) {
-  // Ignore les taps qui viennent des controles eux-memes (boutons, slider, select, chat)
+// Bascule l'affichage de la barre au clic (PC) ou au tap (mobile),
+// en ignorant les clics/taps venant de la barre elle-meme ou du chat
+function toggleControlsOnInteraction(e) {
   if (controls.contains(e.target) || (chatPanel && chatPanel.contains(e.target))) return;
   clearTimeout(hideTimer);
   if (isControlsVisible()) {
     hideControls();
   } else {
     showControls();
-    // Si la barre vient d'etre re-affichee par un tap, on la remasque apres un delai
-    hideTimer = setTimeout(hideControls, HIDE_DELAY);
+    armHideTimer();
   }
 }
 
+// Mobile : comportement existant, actif uniquement en plein ecran
 function startAutoHide() {
-  resetHideTimer();
-  document.addEventListener('mousemove', resetHideTimer);
-  document.addEventListener('touchstart', toggleControlsOnTap);
+  showControls();
+  armHideTimer();
+  document.addEventListener('touchstart', toggleControlsOnInteraction);
 }
 
 function stopAutoHide() {
   clearTimeout(hideTimer);
-  document.removeEventListener('mousemove', resetHideTimer);
-  document.removeEventListener('touchstart', toggleControlsOnTap);
+  document.removeEventListener('touchstart', toggleControlsOnInteraction);
+}
+
+document.addEventListener('fullscreenchange', () => {
+  const isFs = !!document.fullscreenElement;
+  fsIconEnter.style.display = isFs ? 'none' : 'block';
+  fsIconExit.style.display = isFs ? 'block' : 'none';
+
+  if (isTouchDevice()) {
+    if (isFs) {
+      startAutoHide();
+    } else {
+      stopAutoHide();
+      showControls();
+    }
+  }
+});
+
+// PC : la barre se masque toute seule apres quelques secondes sans clic,
+// et un clic la fait re/dis-paraitre, en plein ecran ou non.
+if (!isTouchDevice()) {
+  document.addEventListener('click', toggleControlsOnInteraction);
+  armHideTimer();
 }
 
 // ==== CHAT ====
